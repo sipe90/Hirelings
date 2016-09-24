@@ -9,8 +9,10 @@ import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import net.sipe.hirelings.block.ModBlocks;
-import net.sipe.hirelings.item.ModItems;
+import net.sipe.hirelings.block.HirelingsBlocks;
+import net.sipe.hirelings.crafting.HirelingsRecipes;
+import net.sipe.hirelings.entity.npc.HirelingsEntities;
+import net.sipe.hirelings.item.HirelingsItems;
 import net.sipe.hirelings.proxy.AbstractProxy;
 
 @Mod(modid = HirelingsMod.MOD_ID, version = HirelingsMod.VERSION)
@@ -34,8 +36,10 @@ public class HirelingsMod {
 
     @EventHandler
     public void preInit(FMLPreInitializationEvent event) {
-        ModItems.init();
-        ModBlocks.init();
+        HirelingsItems.init();
+        HirelingsBlocks.init();
+        HirelingsRecipes.init();
+        HirelingsEntities.init();
     }
     
     @EventHandler

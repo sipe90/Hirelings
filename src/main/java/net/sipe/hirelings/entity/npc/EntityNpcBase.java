@@ -3,9 +3,8 @@ package net.sipe.hirelings.entity.npc;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
-import net.sipe.hirelings.HirelingsMod;
 
-public abstract class EntityNpcBase extends EntityLiving implements ModelRendererProvider {
+public abstract class EntityNpcBase extends EntityLiving {
 
     private static final ResourceLocation DEFAULT_TEXTURE = new ResourceLocation("hirelings:textures/entity/npc/default.png");
 
@@ -13,9 +12,8 @@ public abstract class EntityNpcBase extends EntityLiving implements ModelRendere
         super(worldIn);
     }
 
-    @Override
-    public void registerModelRenderer() {
-        HirelingsMod.PROXY.registerModelRenderer(EntityNpcBase.class, RenderNpcBase::new);
+    public ResourceLocation getTexture() {
+        return DEFAULT_TEXTURE;
     }
 
     private void setupAITasks() {}

@@ -1,0 +1,16 @@
+[
+{
+  "modid": "hirelings",
+  "name": "Hirelings Mod",
+  "description": "",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["Sipe_"],
+  "credits": "Me :)",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]

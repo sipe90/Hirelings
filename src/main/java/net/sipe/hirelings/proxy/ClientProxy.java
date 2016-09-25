@@ -8,7 +8,7 @@ import net.minecraftforge.fml.client.registry.IRenderFactory;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.sipe.hirelings.HirelingsMod;
 
-public class ClientProxy extends AbstractProxy {
+public class ClientProxy extends CommonProxy {
 
     @Override
     public void registerItemRenderer(Item item, int meta, String id) {

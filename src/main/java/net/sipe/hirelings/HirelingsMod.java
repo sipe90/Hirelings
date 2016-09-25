@@ -12,8 +12,9 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.sipe.hirelings.block.HirelingsBlocks;
 import net.sipe.hirelings.crafting.HirelingsRecipes;
 import net.sipe.hirelings.entity.npc.HirelingsEntities;
+import net.sipe.hirelings.event.HirelingsEventHandler;
 import net.sipe.hirelings.item.HirelingsItems;
-import net.sipe.hirelings.proxy.AbstractProxy;
+import net.sipe.hirelings.proxy.CommonProxy;
 
 @Mod(modid = HirelingsMod.MOD_ID, version = HirelingsMod.VERSION)
 public class HirelingsMod {
@@ -24,8 +25,8 @@ public class HirelingsMod {
     @Mod.Instance(MOD_ID)
     public static HirelingsMod INSTANCE;
 
-    @SidedProxy(serverSide = "net.sipe.hirelings.proxy.ServerProxy", clientSide = "net.sipe.hirelings.proxy.ClientProxy")
-    public static AbstractProxy PROXY;
+    @SidedProxy(serverSide = "net.sipe.hirelings.proxy.CommonProxy", clientSide = "net.sipe.hirelings.proxy.ClientProxy")
+    public static CommonProxy PROXY;
 
     public static final CreativeTabs CREATIVE_TAB = new CreativeTabs(MOD_ID) {
         @Override
@@ -40,6 +41,7 @@ public class HirelingsMod {
         HirelingsBlocks.init();
         HirelingsRecipes.init();
         HirelingsEntities.init();
+        HirelingsEventHandler.init();
     }
     
     @EventHandler

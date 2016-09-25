@@ -6,9 +6,7 @@ import net.minecraft.item.Item;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.fml.client.registry.IRenderFactory;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
-import net.minecraftforge.fml.common.registry.EntityRegistry;
 import net.sipe.hirelings.HirelingsMod;
-import net.sipe.hirelings.entity.npc.EntityWorker;
 
 public class ClientProxy extends AbstractProxy {
 

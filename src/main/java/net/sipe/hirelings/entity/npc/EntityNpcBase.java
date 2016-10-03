@@ -9,7 +9,6 @@ import net.minecraft.entity.ai.EntityAISwimming;
 import net.minecraft.entity.ai.EntityAIWatchClosest2;
 import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
@@ -82,15 +81,6 @@ public abstract class EntityNpcBase extends EntityCreature {
     }
 
     @Override
-    public NBTTagCompound writeToNBT(NBTTagCompound compound) {return super.writeToNBT(compound);
-    }
-
-    @Override
-    public void readFromNBT(NBTTagCompound compound) {
-        super.readFromNBT(compound);
-    }
-
-    @Override
     public NBTTagCompound serializeNBT() {
         NBTTagCompound nbt = new NBTTagCompound();
         nbt.setTag("npcData", NpcDataHandler.NPC_DATA_STORAGE_CAPABILITY.writeNBT(dataHandler, null));
@@ -98,8 +88,8 @@ public abstract class EntityNpcBase extends EntityCreature {
     }
     @Override
     public void deserializeNBT(NBTTagCompound nbt) {
-        NBTBase list = nbt.getTag("npcData");
-        NpcDataHandler.NPC_DATA_STORAGE_CAPABILITY.readNBT(dataHandler, null, list);
+        NBTTagCompound compound = (NBTTagCompound) nbt.getTag("npcData");
+        NpcDataHandler.NPC_DATA_STORAGE_CAPABILITY.readNBT(dataHandler, null, compound);
     }
 
     @Override

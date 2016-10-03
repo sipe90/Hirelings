@@ -16,12 +16,12 @@ import java.util.Map;
 
 public class NpcDataMessage implements IMessage {
 
-    private static final char NAME = 'a';
-    private static final char EXPERIENCE = 'b';
-    private static final char LEVEL = 'c';
+    private static final byte NAME = 1;
+    private static final byte EXPERIENCE = 2;
+    private static final byte LEVEL = 3;
 
-    private static final BiMap<Character, String> MAP = HashBiMap.create();
-    private static final BiMap<String, Character> INVERSE = MAP.inverse();
+    private static final BiMap<Byte, String> MAP = HashBiMap.create();
+    private static final BiMap<String, Byte> INVERSE = MAP.inverse();
 
     static {
         MAP.put(NAME, NpcDataHandler.TAG_NAME);
@@ -71,7 +71,7 @@ public class NpcDataMessage implements IMessage {
      * @return The String read from the buffer.
      */
     private String readString(ByteBuf buf) {
-        short length = buf.readByte();
+        byte length = buf.readByte();
         byte[] bytes = new byte[length];
         buf.readBytes(bytes, 0, bytes.length);
         return new String(bytes, StandardCharsets.UTF_8);
@@ -83,7 +83,7 @@ public class NpcDataMessage implements IMessage {
         data.forEach((k,v) -> writeTag(buf, INVERSE.get(k), v));
     }
 
-    private void writeTag(ByteBuf buf, char tag, Object value) {
+    private void writeTag(ByteBuf buf, byte tag, Object value) {
         buf.writeChar(tag);
         switch (tag) {
             case NAME:

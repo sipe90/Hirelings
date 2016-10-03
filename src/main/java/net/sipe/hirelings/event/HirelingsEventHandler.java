@@ -7,10 +7,13 @@ import net.minecraft.entity.monster.EntityCreeper;
 import net.minecraft.entity.monster.EntityEnderman;
 import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.monster.EntitySpider;
+import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.sipe.hirelings.HirelingsMod;
 import net.sipe.hirelings.entity.npc.EntityNpcBase;
+import net.sipe.hirelings.entity.npc.NpcDataHandler;
 import net.sipe.hirelings.util.ReflectionUtil;
 
 public class HirelingsEventHandler {
@@ -25,6 +28,15 @@ public class HirelingsEventHandler {
 
     public static void init() {
         HirelingsMod.PROXY.registerEventHandler(new HirelingsEventHandler());
+    }
+
+    @SubscribeEvent
+    public void onAttachEntityCapability(AttachCapabilitiesEvent.Entity event) {
+        if (!(event.getEntity() instanceof EntityNpcBase) || event.getEntity().hasCapability(NpcDataHandler.NPC_DATA_STORAGE_CAPABILITY, null)) {
+            return;
+        }
+        System.out.print("Attached capability!");
+        event.addCapability(new ResourceLocation("hirelings:data/entity/npc/npcdata.dat"), event.getEntity());
     }
 
     /**

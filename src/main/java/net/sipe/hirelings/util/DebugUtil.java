@@ -8,13 +8,16 @@ import java.util.Set;
 
 public class DebugUtil {
 
-    public static String getActiveTaskListsAsString(EntityLiving entity) {
-        return Arrays.toString(getActiveAITasks(entity)) + " : " + Arrays.toString(getActiveAITargetTasks(entity));
+    public static String getActiveAITasksAsString(EntityLiving entity) {
+        return Arrays.toString(getActiveAITasks(entity));
+    }
 
+    public static String getActiveAITargetTasksAsString(EntityLiving entity) {
+        return Arrays.toString(getActiveAITargetTasks(entity));
     }
 
     public static String[] getActiveAITasks(EntityLiving entity) {
-       return getActiveTasks(entity.tasks.taskEntries);
+        return getActiveTasks(entity.tasks.taskEntries);
     }
 
     public static String[] getActiveAITargetTasks(EntityLiving entity) {

@@ -10,28 +10,37 @@ import net.minecraft.entity.ai.EntityAIWatchClosest2;
 import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.network.datasync.DataParameter;
+import net.minecraft.network.datasync.DataSerializers;
+import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
-import net.minecraftforge.common.capabilities.Capability;
-import net.sipe.hirelings.network.NetworkManager;
-import net.sipe.hirelings.network.message.NpcDataMessage;
 import net.sipe.hirelings.util.DebugUtil;
+import net.sipe.hirelings.util.NameGen;
 
 public abstract class EntityNpcBase extends EntityCreature {
 
-    private static final ResourceLocation DEFAULT_TEXTURE = new ResourceLocation("hirelings:textures/entity/npc/default.png");
+    private static final DataParameter<String> NAME = EntityDataManager.createKey(EntityNpcBase.class, DataSerializers.STRING);
+    private static final DataParameter<Byte> LEVEL = EntityDataManager.createKey(EntityNpcBase.class, DataSerializers.BYTE);
+    private static final DataParameter<Float> EXPERIENCE = EntityDataManager.createKey(EntityNpcBase.class, DataSerializers.FLOAT);
 
-    private final NpcDataHandler dataHandler;
+    private static final ResourceLocation DEFAULT_TEXTURE = new ResourceLocation("hirelings:textures/entity/npc/default.png");
 
     public EntityNpcBase(World worldIn) {
         super(worldIn);
-        dataHandler = new NpcDataHandler();
         enablePersistence();
         setAlwaysRenderNameTag(true);
         setCanPickUpLoot(true);
         setLeftHanded(Math.random() >= 0.5D);
         setupAITasks();
+    }
+
+    @Override
+    public void entityInit() {
+        super.entityInit();
+        dataManager.register(NAME, NameGen.randomName());
+        dataManager.register(LEVEL, (byte)0);
+        dataManager.register(EXPERIENCE,0.0F);
     }
 
     public ResourceLocation getTexture() {
@@ -57,7 +66,7 @@ public abstract class EntityNpcBase extends EntityCreature {
     @Override
     public void updateAITasks() {
         super.updateAITasks();
-        setCustomNameTag(dataHandler.getName() + " [" + dataHandler.getLevel() + "] "
+        setCustomNameTag(getNpcName() + " [" + getLevel() + "] "
                 + "§4" + DebugUtil.getActiveAITasksAsString(this)
                 + "§r : §6" + DebugUtil.getActiveAITargetTasksAsString(this) + "§r");
     }
@@ -65,41 +74,54 @@ public abstract class EntityNpcBase extends EntityCreature {
     @Override
     public void onLivingUpdate() {
         super.onLivingUpdate();
-        if (!worldObj.isRemote) {
-            if (dataHandler.isDirty()) {
-                NetworkManager.NETWORK.sendToAll(new NpcDataMessage(getEntityId(), dataHandler.getDirtyAttributes()));
-                dataHandler.setClean();
-            }
-        }
+    }
+
+    public void setNpcName(String name) {
+        dataManager.set(NAME, name);
+    }
+
+    public String getNpcName() {
+        return dataManager.get(NAME);
+    }
+
+    public void setLevel(byte level) {
+        dataManager.set(LEVEL, level);
+    }
+
+    public byte getLevel() {
+        return dataManager.get(LEVEL);
+    }
+
+    public void setExperience(float experience) {
+        dataManager.set(EXPERIENCE, experience);
+    }
+
+    public float getExperience() {
+        return dataManager.get(EXPERIENCE);
     }
 
     @Override
-    protected void applyEntityAttributes()
-    {
-        super.applyEntityAttributes();
-        this.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.5D);
+    public void writeEntityToNBT(NBTTagCompound compound) {
+       super.writeEntityToNBT(compound);
+        compound.setString("npcName", getNpcName());
+        compound.setByte("npcLevel", getLevel());
+        compound.setFloat("npcExperience", getExperience());
     }
 
     @Override
-    public NBTTagCompound serializeNBT() {
-        NBTTagCompound nbt = new NBTTagCompound();
-        nbt.setTag("npcData", NpcDataHandler.NPC_DATA_STORAGE_CAPABILITY.writeNBT(dataHandler, null));
-        return nbt;
-    }
-    @Override
-    public void deserializeNBT(NBTTagCompound nbt) {
-        NBTTagCompound compound = (NBTTagCompound) nbt.getTag("npcData");
-        NpcDataHandler.NPC_DATA_STORAGE_CAPABILITY.readNBT(dataHandler, null, compound);
+    public void readEntityFromNBT(NBTTagCompound compound) {
+        super.readEntityFromNBT(compound);
+        setNpcName(compound.getString("npcName"));
+        setLevel(compound.getByte("npcLevel"));
+        setExperience(compound.getFloat("npcExperience"));
     }
 
     @Override
     public boolean isAIDisabled() { return false;}
 
     @Override
-    public <T> T getCapability(Capability<T> capability, EnumFacing facing) {
-        if (capability ==  NpcDataHandler.NPC_DATA_STORAGE_CAPABILITY) {
-            return NpcDataHandler.NPC_DATA_STORAGE_CAPABILITY.cast(dataHandler);
-        }
-        return super.getCapability(capability, facing);
+    protected void applyEntityAttributes() {
+        super.applyEntityAttributes();
+        this.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.5D);
     }
 }

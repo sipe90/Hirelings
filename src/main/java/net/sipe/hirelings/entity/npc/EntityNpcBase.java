@@ -1,5 +1,6 @@
 package net.sipe.hirelings.entity.npc;
 
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityCreature;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.SharedMonsterAttributes;
@@ -9,20 +10,29 @@ import net.minecraft.entity.ai.EntityAISwimming;
 import net.minecraft.entity.ai.EntityAIWatchClosest2;
 import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
+import net.minecraftforge.items.CapabilityItemHandler;
+import net.minecraftforge.items.IItemHandlerModifiable;
+import net.minecraftforge.items.ItemStackHandler;
 import net.sipe.hirelings.util.DebugUtil;
+import net.sipe.hirelings.util.InventoryUtil;
 import net.sipe.hirelings.util.NameGen;
+
+import static net.minecraftforge.items.CapabilityItemHandler.ITEM_HANDLER_CAPABILITY;
 
 public abstract class EntityNpcBase extends EntityCreature {
 
     private static final DataParameter<String> NAME = EntityDataManager.createKey(EntityNpcBase.class, DataSerializers.STRING);
     private static final DataParameter<Byte> LEVEL = EntityDataManager.createKey(EntityNpcBase.class, DataSerializers.BYTE);
     private static final DataParameter<Float> EXPERIENCE = EntityDataManager.createKey(EntityNpcBase.class, DataSerializers.FLOAT);
+
+    private final IItemHandlerModifiable npcInventoryHandler = new ItemStackHandler(2);
 
     private static final ResourceLocation DEFAULT_TEXTURE = new ResourceLocation("hirelings:textures/entity/npc/default.png");
 
@@ -47,7 +57,7 @@ public abstract class EntityNpcBase extends EntityCreature {
         return DEFAULT_TEXTURE;
     }
 
-    private void setupAITasks() {
+    protected void setupAITasks() {
         tasks.taskEntries.clear();
         targetTasks.taskEntries.clear();
 
@@ -66,7 +76,7 @@ public abstract class EntityNpcBase extends EntityCreature {
     @Override
     public void updateAITasks() {
         super.updateAITasks();
-        setCustomNameTag(getNpcName() + " [" + getLevel() + "] "
+        setCustomNameTag(getNpcName() + " [" + InventoryUtil.getFreeInventorySlots(this) + "/" + InventoryUtil.getTotalInventorySlots(this) + "] "
                 + "§4" + DebugUtil.getActiveAITasksAsString(this)
                 + "§r : §6" + DebugUtil.getActiveAITargetTasksAsString(this) + "§r");
     }
@@ -74,6 +84,15 @@ public abstract class EntityNpcBase extends EntityCreature {
     @Override
     public void onLivingUpdate() {
         super.onLivingUpdate();
+    }
+
+    @Override
+    public void onItemPickup(Entity entity, int amount) {
+        super.onItemPickup(entity, amount);
+    }
+
+    public IItemHandlerModifiable getInventoryHandler() {
+        return npcInventoryHandler;
     }
 
     public void setNpcName(String name) {
@@ -103,17 +122,25 @@ public abstract class EntityNpcBase extends EntityCreature {
     @Override
     public void writeEntityToNBT(NBTTagCompound compound) {
        super.writeEntityToNBT(compound);
+
+        NBTBase inventory = CapabilityItemHandler.ITEM_HANDLER_CAPABILITY.writeNBT(npcInventoryHandler, null);
+
         compound.setString("npcName", getNpcName());
         compound.setByte("npcLevel", getLevel());
         compound.setFloat("npcExperience", getExperience());
+        compound.setTag("npcInventory", inventory);
     }
 
     @Override
     public void readEntityFromNBT(NBTTagCompound compound) {
         super.readEntityFromNBT(compound);
+
         setNpcName(compound.getString("npcName"));
         setLevel(compound.getByte("npcLevel"));
         setExperience(compound.getFloat("npcExperience"));
+        NBTBase inventory = compound.getTag("npcInventory");
+
+        ITEM_HANDLER_CAPABILITY.readNBT(npcInventoryHandler, null, inventory);
     }
 
     @Override

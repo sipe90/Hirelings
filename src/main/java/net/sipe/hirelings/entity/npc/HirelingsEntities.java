@@ -9,7 +9,7 @@ public class HirelingsEntities {
     public static void init() {
 
         EntityRegistry.registerModEntity(EntityWorker.class, "entityWorker", 10, HirelingsMod.INSTANCE, 80, 1, true, 0x79553A, 0x6FAE44);
-        HirelingsMod.PROXY.registerModelRenderer(EntityNpcBase.class, RenderNpcBase::new);
+        HirelingsMod.PROXY.registerModelRendering();
     }
 
 }

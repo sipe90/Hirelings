@@ -10,6 +10,7 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.sipe.hirelings.block.HirelingsBlocks;
+import net.sipe.hirelings.capability.HirelingsCapabilities;
 import net.sipe.hirelings.crafting.HirelingsRecipes;
 import net.sipe.hirelings.entity.npc.HirelingsEntities;
 import net.sipe.hirelings.event.HirelingsEventHandler;
@@ -42,6 +43,7 @@ public class HirelingsMod {
         HirelingsBlocks.init();
         HirelingsRecipes.init();
         HirelingsEntities.init();
+        HirelingsCapabilities.register();
         HirelingsEventHandler.init();
         NetworkManager.init();
     }

@@ -1,14 +1,17 @@
 package net.sipe.hirelings.entity.npc;
 
-import net.minecraft.init.Blocks;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemBlock;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Items;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.EnumHand;
 import net.minecraft.world.World;
-import net.sipe.hirelings.entity.npc.ai.EntityNpcAIGather;
 import net.sipe.hirelings.entity.npc.job.JobBase;
+import net.sipe.hirelings.entity.npc.job.JobCollector;
+import net.sipe.hirelings.entity.player.PlayerProperties;
+import net.sipe.hirelings.util.HirelingsTextComponentString;
 
-import java.util.HashSet;
-import java.util.Set;
+import static net.sipe.hirelings.capability.HirelingsCapabilities.PLAYER_PROPERTIES_CAPABILITY;
 
 public class EntityWorker extends EntityNpcBase {
 
@@ -21,12 +24,38 @@ public class EntityWorker extends EntityNpcBase {
     @Override
     protected void setupAITasks() {
         super.setupAITasks();
-
-        Set<Item> itemsToPickup = new HashSet<>();
-        itemsToPickup.add(ItemBlock.getItemFromBlock(Blocks.COBBLESTONE));
-        tasks.addTask(2, new EntityNpcAIGather(this, itemsToPickup));
+        job = new JobCollector();
+        job.initTasks(this);
     }
 
+    public JobBase getJob() {
+        return job;
+    }
 
+    @Override
+    public boolean processInteract(EntityPlayer player, EnumHand hand, ItemStack stack) {
+        if (!player.worldObj.isRemote && stack != null && stack.getItem() == Items.STICK && player.hasCapability(PLAYER_PROPERTIES_CAPABILITY, null)) {
+            PlayerProperties properties = player.getCapability(PLAYER_PROPERTIES_CAPABILITY, null);
+            properties.setLinkEntity(getEntityId());
+            player.addChatMessage(new HirelingsTextComponentString("Initiated link..."));
+            return true;
+        }
+        return super.processInteract(player, hand, stack);
+    }
+
+    @Override
+    public void writeEntityToNBT(NBTTagCompound compound) {
+        super.writeEntityToNBT(compound);
+        NBTTagCompound jobCompound = new NBTTagCompound();
+        job.writeEntityToNBT(jobCompound);
+        compound.setTag("npcJob", jobCompound);
+    }
+
+    @Override
+    public void readEntityFromNBT(NBTTagCompound compound) {
+        super.readEntityFromNBT(compound);
+        NBTTagCompound jobCompound = (NBTTagCompound) compound.getTag("npcJob");
+        job.readEntityFromNBT(jobCompound);
+    }
 
 }

@@ -20,9 +20,10 @@ import net.minecraft.world.World;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandlerModifiable;
 import net.minecraftforge.items.ItemStackHandler;
+import net.sipe.hirelings.HirelingsMod;
 import net.sipe.hirelings.util.DebugUtil;
-import net.sipe.hirelings.util.InventoryUtil;
 import net.sipe.hirelings.util.NameGen;
+import net.sipe.hirelings.util.inventory.InventoryUtil;
 
 import static net.minecraftforge.items.CapabilityItemHandler.ITEM_HANDLER_CAPABILITY;
 
@@ -34,13 +35,12 @@ public abstract class EntityNpcBase extends EntityCreature {
 
     private final IItemHandlerModifiable npcInventoryHandler = new ItemStackHandler(2);
 
-    private static final ResourceLocation DEFAULT_TEXTURE = new ResourceLocation("hirelings:textures/entity/npc/default.png");
+    private static final ResourceLocation DEFAULT_TEXTURE = new ResourceLocation(HirelingsMod.MOD_ID, "textures/entity/npc/default.png");
 
     public EntityNpcBase(World worldIn) {
         super(worldIn);
         enablePersistence();
         setAlwaysRenderNameTag(true);
-        setCanPickUpLoot(true);
         setLeftHanded(Math.random() >= 0.5D);
         setupAITasks();
     }
@@ -71,6 +71,12 @@ public abstract class EntityNpcBase extends EntityCreature {
         tasks.addTask(8, new EntityAIWatchClosest2(this, EntityPlayer.class, 3.0F, 1.0F));
         tasks.addTask(9, new EntityAIWatchClosest2(this, EntityLiving.class, 6.0F, 0.02F));
         tasks.addTask(10, new EntityAILookIdle(this));
+    }
+
+    @Override
+    protected void applyEntityAttributes() {
+        super.applyEntityAttributes();
+        this.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.5D);
     }
 
     @Override
@@ -139,16 +145,10 @@ public abstract class EntityNpcBase extends EntityCreature {
         setLevel(compound.getByte("npcLevel"));
         setExperience(compound.getFloat("npcExperience"));
         NBTBase inventory = compound.getTag("npcInventory");
-
         ITEM_HANDLER_CAPABILITY.readNBT(npcInventoryHandler, null, inventory);
     }
 
     @Override
     public boolean isAIDisabled() { return false;}
 
-    @Override
-    protected void applyEntityAttributes() {
-        super.applyEntityAttributes();
-        this.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.5D);
-    }
 }

@@ -6,20 +6,16 @@ import net.minecraft.init.SoundEvents;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.SoundCategory;
-import net.minecraftforge.items.IItemHandlerModifiable;
-import net.minecraftforge.items.ItemHandlerHelper;
 import net.sipe.hirelings.entity.npc.EntityNpcBase;
-import net.sipe.hirelings.util.InventoryUtil;
+import net.sipe.hirelings.util.inventory.AbstractFilter;
+import net.sipe.hirelings.util.inventory.InventoryUtil;
+import net.sipe.hirelings.util.inventory.SimpleFilter;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
-import static net.minecraftforge.items.ItemHandlerHelper.insertItemStacked;
-
-public class EntityNpcAIGather extends EntityAIBase {
+public class EntityAIGather extends EntityAIBase {
 
     private static final double PICKUP_RANGE = 2.0D;
 
@@ -28,42 +24,31 @@ public class EntityNpcAIGather extends EntityAIBase {
 
     private final EntityNpcBase entity;
 
-    private boolean canPickupLoot;
-
     private double radiusHorizontal;
     private double radiusVertical;
 
-    private Set<Item> itemsToPickup;
+    private AbstractFilter<Item> filter;
 
+    private float speed;
     private List<EntityItem> nearbyItems = new ArrayList<>();
     private EntityItem currentTargetedItem;
 
-    public EntityNpcAIGather(EntityNpcBase entity) {
-        this(entity, new HashSet<>());
+    public EntityAIGather(EntityNpcBase entity, float speed) {
+        this(entity, speed, null);
     }
 
-    public EntityNpcAIGather(EntityNpcBase entity, Set<Item> itemsToPickup) {
-        this(entity, DEF_HORIZONTAL_RADIUS, DEF_VERTICAL_RADIUS, itemsToPickup);
+    public EntityAIGather(EntityNpcBase entity, float speed, AbstractFilter<Item> filter) {
+        this(entity, speed, DEF_HORIZONTAL_RADIUS, DEF_VERTICAL_RADIUS, filter);
     }
 
-    public EntityNpcAIGather(EntityNpcBase entity, double radiusHorizontal, double radiusVertical, Set<Item> itemsToPickup) {
+    public EntityAIGather(EntityNpcBase entity, float speed, double radiusHorizontal, double radiusVertical, AbstractFilter<Item> filter) {
+        if (filter == null) { filter = SimpleFilter.allowAllFilter(); }
         this.entity = entity;
+        this.speed = speed;
         this.radiusHorizontal = radiusHorizontal;
         this.radiusVertical = radiusVertical;
-        this.itemsToPickup = itemsToPickup;
+        this.filter = filter;
         setMutexBits(1);
-    }
-
-    public void addItem(Item item) {
-        itemsToPickup.add(item);
-    }
-
-    public void removeItem(Item item) {
-        itemsToPickup.remove(item);
-    }
-
-    public void clearItems() {
-        itemsToPickup.clear();
     }
 
     @Override
@@ -71,32 +56,26 @@ public class EntityNpcAIGather extends EntityAIBase {
         if (isInventoryFull()) {
             return false;
         }
-        nearbyItems = entity.worldObj.getEntitiesWithinAABB(EntityItem.class,
-                entity.getEntityBoundingBox().expand(radiusHorizontal, radiusVertical, radiusHorizontal),
-                (item) -> itemsToPickup.contains(item.getEntityItem().getItem()))
-                .stream().sorted((itemEntity, otherItemEntity) -> (int)(itemEntity.getDistanceToEntity(entity) - otherItemEntity.getDistanceToEntity(entity)))
-                .collect(Collectors.toList());
+        nearbyItems = getEntities();
         return !nearbyItems.isEmpty();
+    }
+
+    private List<EntityItem> getEntities() {
+         return entity.worldObj.getEntitiesWithinAABB(EntityItem.class,
+                entity.getEntityBoundingBox().expand(radiusHorizontal, radiusVertical, radiusHorizontal), (entity) -> filter.test(entity.getEntityItem().getItem()))
+                .stream().sorted((itemEntity, otherItemEntity) -> (int) (itemEntity.getDistanceToEntity(entity) - otherItemEntity.getDistanceToEntity(entity)))
+                .collect(Collectors.toList());
     }
 
     @Override
     public void startExecuting() {
-        canPickupLoot = entity.canPickUpLoot();
-        entity.setCanPickUpLoot(false);
     }
 
     @Override
     public boolean continueExecuting() {
-        boolean continueExecuting = !nearbyItems.isEmpty() && isRoomForItem(entity.getInventoryHandler(), currentTargetedItem.getEntityItem());
-        if (!continueExecuting) {
-           onStopExecuting();
-        }
-        return continueExecuting;
+        return !nearbyItems.isEmpty() && InventoryUtil.hasRoomForItems(entity.getInventoryHandler(), currentTargetedItem.getEntityItem(), false);
     }
 
-    private void onStopExecuting() {
-        entity.setCanPickUpLoot(canPickupLoot);
-    }
 
     @Override
     public void updateTask() {
@@ -109,7 +88,7 @@ public class EntityNpcAIGather extends EntityAIBase {
         }
         if (!currentTargetedItem.cannotPickup()) {
             if (entity.getNavigator().noPath()) {
-                entity.getNavigator().tryMoveToXYZ(currentTargetedItem.posX, currentTargetedItem.posY, currentTargetedItem.posZ, 1.0D);
+                entity.getNavigator().tryMoveToXYZ(currentTargetedItem.posX, currentTargetedItem.posY, currentTargetedItem.posZ, speed);
             }
             entity.getLookHelper().setLookPositionWithEntity(currentTargetedItem, 30.0F, 30.0F);
         }
@@ -130,14 +109,6 @@ public class EntityNpcAIGather extends EntityAIBase {
        return InventoryUtil.getFreeInventorySlots(entity) == 0;
     }
 
-    private boolean isRoomForItem(IItemHandlerModifiable handler, ItemStack stack) {
-        if (stack == null) {
-            return true;
-        }
-        ItemStack result = insertItemStacked(handler, stack, true);
-        return result == null || result.stackSize == 0;
-    }
-
     private void onItemPickup(EntityItem item) {
         if (entity.worldObj.isRemote) {
             return;
@@ -149,7 +120,7 @@ public class EntityNpcAIGather extends EntityAIBase {
                 item.worldObj.playSound(null, entity.posX, entity.posY, entity.posZ, SoundEvents.ENTITY_ITEM_PICKUP, SoundCategory.PLAYERS, 0.2F, ((entity.getRNG().nextFloat() - entity.getRNG().nextFloat()) * 0.7F + 1.0F) * 2.0F);
             }
             ItemStack itemStack = item.getEntityItem();
-            ItemStack newStack = ItemHandlerHelper.insertItemStacked(entity.getInventoryHandler(), itemStack, false);
+            ItemStack newStack = InventoryUtil.insertItemStacked(entity.getInventoryHandler(), itemStack, false);
             item.setEntityItemStack(newStack);
             entity.onItemPickup(item, i);
             if (newStack == null || newStack.stackSize <= 0) {

@@ -2,12 +2,15 @@ package net.sipe.hirelings.entity.npc.job;
 
 import net.minecraft.entity.ai.EntityAIBase;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.math.BlockPos;
 import net.sipe.hirelings.entity.npc.EntityNpcBase;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public abstract class JobBase {
+
+    protected BlockPos homePos;
 
     protected List<EntityAIBase> jobTasks = new ArrayList<>();
     protected List<EntityAIBase> jobTargetTasks = new ArrayList<>();

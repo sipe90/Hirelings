@@ -10,7 +10,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.sipe.hirelings.HirelingsMod;
 import net.sipe.hirelings.entity.npc.EntityWorker;
-import net.sipe.hirelings.entity.npc.ai.EntityAIDumpItems;
+import net.sipe.hirelings.entity.npc.ai.EntityAIEmptyInventory;
 
 public class InventoryLinkMessage implements IMessage {
 
@@ -48,7 +48,7 @@ public class InventoryLinkMessage implements IMessage {
                         // TODO: Log debug/error?
                         return;
                     }
-                EntityAIDumpItems task = (EntityAIDumpItems) ((EntityWorker) entity).getJob().getTask(EntityAIDumpItems.class);
+                EntityAIEmptyInventory task = (EntityAIEmptyInventory) ((EntityWorker) entity).getJob().getTask(EntityAIEmptyInventory.class);
                 task.setInventory(tileEntity);
             });
             return null;

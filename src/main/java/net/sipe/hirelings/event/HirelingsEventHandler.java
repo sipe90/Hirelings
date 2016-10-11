@@ -21,7 +21,7 @@ import net.sipe.hirelings.HirelingsMod;
 import net.sipe.hirelings.capability.provider.PlayerPropertiesProvider;
 import net.sipe.hirelings.entity.npc.EntityNpcBase;
 import net.sipe.hirelings.entity.npc.EntityWorker;
-import net.sipe.hirelings.entity.npc.ai.EntityAIDumpItems;
+import net.sipe.hirelings.entity.npc.ai.EntityAIEmptyInventory;
 import net.sipe.hirelings.entity.player.PlayerProperties;
 import net.sipe.hirelings.network.NetworkManager;
 import net.sipe.hirelings.network.message.PlayerPropertiesMessage;
@@ -95,7 +95,7 @@ public class HirelingsEventHandler {
                 // TODO: Log debug/error?
                 return;
             }
-            EntityAIDumpItems task = (EntityAIDumpItems) ((EntityWorker) linkEntity).getJob().getTask(EntityAIDumpItems.class);
+            EntityAIEmptyInventory task = (EntityAIEmptyInventory) ((EntityWorker) linkEntity).getJob().getTask(EntityAIEmptyInventory.class);
             task.setInventory(target);
             properties.resetLinking();
             player.addChatMessage(new HirelingsTextComponentString("Inventory linked!"));

@@ -6,6 +6,8 @@ import net.minecraft.init.SoundEvents;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.SoundCategory;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
 import net.sipe.hirelings.entity.npc.EntityNpcBase;
 import net.sipe.hirelings.util.inventory.AbstractFilter;
 import net.sipe.hirelings.util.inventory.InventoryUtil;
@@ -18,17 +20,12 @@ import java.util.stream.Collectors;
 public class EntityAIGather extends EntityAIBase {
 
     private static final double PICKUP_RANGE = 2.0D;
-
-    private static final double DEF_HORIZONTAL_RADIUS = 10.0D;
-    private static final double DEF_VERTICAL_RADIUS = 5.0D;
+    private static final int DEF_RADIUS = 10;
 
     private final EntityNpcBase entity;
 
-    private double radiusHorizontal;
-    private double radiusVertical;
-
+    private int radius;
     private AbstractFilter<Item> filter;
-
     private float speed;
     private List<EntityItem> nearbyItems = new ArrayList<>();
     private EntityItem currentTargetedItem;
@@ -38,22 +35,22 @@ public class EntityAIGather extends EntityAIBase {
     }
 
     public EntityAIGather(EntityNpcBase entity, float speed, AbstractFilter<Item> filter) {
-        this(entity, speed, DEF_HORIZONTAL_RADIUS, DEF_VERTICAL_RADIUS, filter);
+        this(entity, speed, DEF_RADIUS, filter);
     }
 
-    public EntityAIGather(EntityNpcBase entity, float speed, double radiusHorizontal, double radiusVertical, AbstractFilter<Item> filter) {
+    public EntityAIGather(EntityNpcBase entity, float speed, int radius, AbstractFilter<Item> filter) {
         if (filter == null) { filter = SimpleFilter.allowAllFilter(); }
         this.entity = entity;
         this.speed = speed;
-        this.radiusHorizontal = radiusHorizontal;
-        this.radiusVertical = radiusVertical;
+        this.radius = radius;
         this.filter = filter;
+        entity.setHomePosAndDistance(entity.getHomePosition(), radius);
         setMutexBits(1);
     }
 
     @Override
     public boolean shouldExecute() {
-        if (isInventoryFull()) {
+        if (entity.getHomePosition() == BlockPos.ORIGIN || isInventoryFull()) {
             return false;
         }
         nearbyItems = getEntities();
@@ -61,8 +58,9 @@ public class EntityAIGather extends EntityAIBase {
     }
 
     private List<EntityItem> getEntities() {
-         return entity.worldObj.getEntitiesWithinAABB(EntityItem.class,
-                entity.getEntityBoundingBox().expand(radiusHorizontal, radiusVertical, radiusHorizontal), (entity) -> filter.test(entity.getEntityItem().getItem()))
+        AxisAlignedBB pickupRange = new AxisAlignedBB(entity.getHomePosition()).expand(radius, radius, radius);
+         return entity.worldObj.getEntitiesWithinAABB(EntityItem.class, pickupRange,
+                 (entity) -> filter.test(entity.getEntityItem().getItem()))
                 .stream().sorted((itemEntity, otherItemEntity) -> (int) (itemEntity.getDistanceToEntity(entity) - otherItemEntity.getDistanceToEntity(entity)))
                 .collect(Collectors.toList());
     }

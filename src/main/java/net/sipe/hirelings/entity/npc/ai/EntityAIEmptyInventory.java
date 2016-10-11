@@ -13,11 +13,12 @@ import net.sipe.hirelings.util.inventory.AbstractFilter;
 import net.sipe.hirelings.util.inventory.InventoryUtil;
 import net.sipe.hirelings.util.inventory.SimpleFilter;
 
-public class EntityAIDumpItems extends EntityAIBase {
+public class EntityAIEmptyInventory extends EntityAIBase {
 
     private static final double MAX_INTERACT_DISTANCE = 4.0F;
 
     private EntityNpcBase entity;
+    private BlockPos inventoryPos;
     private TileEntity inventory;
     private AbstractFilter<Item> filter;
 
@@ -25,54 +26,55 @@ public class EntityAIDumpItems extends EntityAIBase {
     private int ticksLidOpen = 0;
     private boolean using = false;
 
-    public EntityAIDumpItems(EntityNpcBase entity, float speed) {
+    public EntityAIEmptyInventory(EntityNpcBase entity, float speed) {
         this(entity, speed, (AbstractFilter<Item>)null);
     }
 
-    public EntityAIDumpItems(EntityNpcBase entity, float speed, AbstractFilter<Item> filter) {
+    public EntityAIEmptyInventory(EntityNpcBase entity, float speed, AbstractFilter<Item> filter) {
         this(entity, speed, null, filter);
     }
 
-    public EntityAIDumpItems(EntityNpcBase entity, float speed, TileEntity tileEntity) {
-        this(entity, speed, tileEntity, null);
+    public EntityAIEmptyInventory(EntityNpcBase entity, float speed, BlockPos inventoryPos) {
+        this(entity, speed, inventoryPos, null);
     }
 
-    public EntityAIDumpItems(EntityNpcBase entity, float speed, TileEntity inventory, AbstractFilter<Item> filter) {
+    public EntityAIEmptyInventory(EntityNpcBase entity, float speed, BlockPos inventoryPos, AbstractFilter<Item> filter) {
         if (filter == null) { filter = SimpleFilter.allowAllFilter(); }
         this.speed = speed;
         this.filter = filter;
         this.entity = entity;
-        this.inventory = inventory;
-        if (inventory != null) {
-            setInventory(inventory);
-            this.entity.setHomePosAndDistance(inventory.getPos(), 2);
-        }
+        this.inventoryPos = inventoryPos;
         setMutexBits(1);
+    }
+
+    public void setInventory(TileEntity inventory) {
+        validateInventory(inventory);
+        this.inventory = inventory;
+        this.inventoryPos = inventory.getPos();
+    }
+
+    public void setInventoryPos(BlockPos inventoryPos) {
+        this.inventoryPos = inventoryPos;
+    }
+
+    private void loadInventoryFromPos() {
+        TileEntity tileEntity = entity.worldObj.getTileEntity(inventoryPos);
+        validateInventory(tileEntity);
+        entity.setHomePosAndDistance(inventoryPos, (int)entity.getMaximumHomeDistance());
+        this.inventory = tileEntity;
     }
 
     private void validateInventory(TileEntity tileEntity) {
         if (tileEntity == null) {
-            throw new IllegalArgumentException("Given inventory TileEntity was null");
+            throw new IllegalArgumentException("TileEntity not found at given BlockPos");
         }
         if (!tileEntity.hasCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, null)) {
-           throw new IllegalArgumentException("Given inventory TileEntity does not have ItemHandler capability");
+            throw new IllegalArgumentException("Given TileEntity does not have ItemHandler capability");
         }
     }
 
-    public void setInventory(BlockPos inventoryPos) {
-        TileEntity tileEntity = entity.worldObj.getTileEntity(inventoryPos);
-        if (tileEntity != null) {
-            setInventory(tileEntity);
-        }
-    }
-
-    public void setInventory(TileEntity tileEntity) {
-        validateInventory(tileEntity);
-        this.inventory = tileEntity;
-    }
-
-    public TileEntity getInventory() {
-        return inventory;
+    public BlockPos getInventoryPos() {
+        return inventoryPos;
     }
 
     private IItemHandler getTargetInventory() {
@@ -81,7 +83,18 @@ public class EntityAIDumpItems extends EntityAIBase {
 
     @Override
     public boolean shouldExecute() {
-        if (inventory == null || filter.allowNone() || InventoryUtil.isEmpty(entity.getInventoryHandler())) {
+        if (inventoryPos == null) {
+            return false;
+        }
+        if (inventory == null || !inventory.getPos().equals(inventoryPos)) {
+            loadInventoryFromPos();
+        }
+        if (inventory.isInvalid()) {
+            inventoryPos = null;
+            inventory = null;
+            return false;
+        }
+        if (filter.allowNone() || InventoryUtil.isEmpty(entity.getInventoryHandler())) {
             return false;
         }
         for (int i = 0; i < entity.getInventoryHandler().getSlots(); i++) {
@@ -94,11 +107,12 @@ public class EntityAIDumpItems extends EntityAIBase {
     }
 
     @Override
-    public void startExecuting() {}
+    public void startExecuting() {
+    }
 
     @Override
     public boolean continueExecuting() {
-        return using || (inventory != null && !InventoryUtil.isEmpty(entity.getInventoryHandler()) && InventoryUtil.transferItems(entity.getInventoryHandler(), getTargetInventory(), filter, true));
+        return using || (!inventory.isInvalid() && !InventoryUtil.isEmpty(entity.getInventoryHandler()) && InventoryUtil.transferItems(entity.getInventoryHandler(), getTargetInventory(), filter, true));
     }
 
     @Override
@@ -111,10 +125,7 @@ public class EntityAIDumpItems extends EntityAIBase {
         if (inventory instanceof TileEntityChest) {
             if (using) {
                 if (ticksLidOpen >= 20D) {
-                    if (!entity.worldObj.isRemote) {
-                        entity.worldObj.addBlockEvent(inventory.getPos(), inventory.getBlockType(), 1, --((TileEntityChest) inventory).numPlayersUsing);
-                    }
-                    using = false;
+                    sendChestBlockEvent();
                     ticksLidOpen = 0;
                 } else {
                     ticksLidOpen++;
@@ -128,8 +139,7 @@ public class EntityAIDumpItems extends EntityAIBase {
             if (InventoryUtil.transferItems(entity.getInventoryHandler(), getTargetInventory(), filter, false)) {
                 if (inventory instanceof TileEntityChest) {
                     if (!using) {
-                        entity.worldObj.addBlockEvent(inventory.getPos(), inventory.getBlockType(), 1, ++((TileEntityChest) inventory).numPlayersUsing);
-                        using = true;
+                        sendChestBlockEvent();
                     }
                 }
             }
@@ -138,12 +148,19 @@ public class EntityAIDumpItems extends EntityAIBase {
         }
     }
 
+    private void sendChestBlockEvent() {
+        if (entity.worldObj.isRemote) {
+            return;
+        }
+        int eventParam = using ? --((TileEntityChest) inventory).numPlayersUsing : ++((TileEntityChest) inventory).numPlayersUsing;
+        entity.worldObj.addBlockEvent(inventory.getPos(), inventory.getBlockType(), 1, eventParam);
+        using = !using;
+    }
+
     @Override
     public void resetTask() {
         if (using && inventory instanceof TileEntityChest) {
-            if (!entity.worldObj.isRemote) {
-                entity.worldObj.addBlockEvent(inventory.getPos(), inventory.getBlockType(), 1, --((TileEntityChest) inventory).numPlayersUsing);
-            }
+            sendChestBlockEvent();
         }
         ticksLidOpen = 0;
         using = false;

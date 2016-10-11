@@ -19,14 +19,10 @@ public class EntityWorker extends EntityNpcBase {
 
     public EntityWorker(World worldIn) {
         super(worldIn);
-    }
-
-    @Override
-    protected void setupAITasks() {
-        super.setupAITasks();
         job = new JobCollector();
         job.initTasks(this);
     }
+
 
     public JobBase getJob() {
         return job;

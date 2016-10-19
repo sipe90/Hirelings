@@ -50,7 +50,7 @@ public class EntityAIGather extends EntityAIBase {
 
     @Override
     public boolean shouldExecute() {
-        if (entity.getHomePosition() == BlockPos.ORIGIN || isInventoryFull()) {
+        if (!entity.hasInventory() || entity.getHomePosition() == BlockPos.ORIGIN || isInventoryFull()) {
             return false;
         }
         nearbyItems = getEntities();

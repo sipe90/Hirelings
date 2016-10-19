@@ -15,4 +15,9 @@ public class RenderNpcBase<T extends EntityNpcBase> extends RenderBiped<T> {
     protected ResourceLocation getEntityTexture(EntityNpcBase entity) {
         return entity.getTexture();
     }
+
+    @Override
+    protected boolean canRenderName(T entity) {
+        return !entity.isInventoryRendering() && entity.hasCustomName();
+    }
 }

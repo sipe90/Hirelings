@@ -10,16 +10,17 @@ import net.minecraft.entity.ai.EntityAISwimming;
 import net.minecraft.entity.ai.EntityAIWatchClosest2;
 import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandlerModifiable;
-import net.minecraftforge.items.ItemStackHandler;
 import net.sipe.hirelings.HirelingsMod;
 import net.sipe.hirelings.util.DebugUtil;
 import net.sipe.hirelings.util.NameGen;
@@ -33,9 +34,14 @@ public abstract class EntityNpcBase extends EntityCreature {
     private static final DataParameter<Byte> LEVEL = EntityDataManager.createKey(EntityNpcBase.class, DataSerializers.BYTE);
     private static final DataParameter<Float> EXPERIENCE = EntityDataManager.createKey(EntityNpcBase.class, DataSerializers.FLOAT);
 
-    private final IItemHandlerModifiable npcInventoryHandler = new ItemStackHandler(2);
+    protected IItemHandlerModifiable npcInventoryHandler;
 
     private static final ResourceLocation DEFAULT_TEXTURE = new ResourceLocation(HirelingsMod.MOD_ID, "textures/entity/npc/default.png");
+
+    protected boolean hasGui = false;
+
+    // A hack to tell the renderer not to render name tag when rendering the model in the inventory gui screen.
+    private boolean inventoryRendering = false;
 
     public EntityNpcBase(World worldIn) {
         super(worldIn);
@@ -88,6 +94,27 @@ public abstract class EntityNpcBase extends EntityCreature {
     }
 
     @Override
+    public boolean processInteract(EntityPlayer player, EnumHand hand, ItemStack stack) {
+        if (!worldObj.isRemote) {
+            if (hasGui) {
+                openGui(player);
+            }
+        }
+        return true;
+    }
+
+    public void setInventoryRendering(boolean inventoryRendering) {
+        this.inventoryRendering = inventoryRendering;
+    }
+
+    public boolean isInventoryRendering() {
+        return inventoryRendering;
+    }
+
+    protected void openGui(EntityPlayer player) {
+    }
+
+    @Override
     public void onLivingUpdate() {
         super.onLivingUpdate();
     }
@@ -95,6 +122,10 @@ public abstract class EntityNpcBase extends EntityCreature {
     @Override
     public void onItemPickup(Entity entity, int amount) {
         super.onItemPickup(entity, amount);
+    }
+
+    public boolean hasInventory() {
+        return npcInventoryHandler != null;
     }
 
     public IItemHandlerModifiable getInventoryHandler() {

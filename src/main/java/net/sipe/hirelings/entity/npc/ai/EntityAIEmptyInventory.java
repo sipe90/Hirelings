@@ -83,7 +83,7 @@ public class EntityAIEmptyInventory extends EntityAIBase {
 
     @Override
     public boolean shouldExecute() {
-        if (inventoryPos == null) {
+        if (!entity.hasInventory() || inventoryPos == null) {
             return false;
         }
         if (inventory == null || !inventory.getPos().equals(inventoryPos)) {
@@ -99,7 +99,7 @@ public class EntityAIEmptyInventory extends EntityAIBase {
         }
         for (int i = 0; i < entity.getInventoryHandler().getSlots(); i++) {
             ItemStack itemStack = entity.getInventoryHandler().getStackInSlot(i);
-            if (filter.test(itemStack.getItem()) && InventoryUtil.hasRoomForItems(getTargetInventory(), itemStack, false)) {
+            if (itemStack != null && filter.test(itemStack.getItem()) && InventoryUtil.hasRoomForItems(getTargetInventory(), itemStack, false)) {
                 return true;
             }
         }

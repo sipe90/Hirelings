@@ -24,9 +24,8 @@ public class EntityAIMoveTowardsRestrictionAdvanced extends EntityAIBase {
     /**
      * Returns whether the EntityAIBase should begin execution.
      */
-    public boolean shouldExecute()
-    {
-        if (this.theEntity.isWithinHomeDistanceCurrentPosition()) {
+    public boolean shouldExecute() {
+        if (this.theEntity.getHomePosition() == BlockPos.ORIGIN || this.theEntity.isWithinHomeDistanceCurrentPosition()) {
             return false;
         } else {
             BlockPos blockpos = this.theEntity.getHomePosition();

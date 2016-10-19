@@ -6,6 +6,9 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumHand;
 import net.minecraft.world.World;
+import net.minecraftforge.items.ItemStackHandler;
+import net.sipe.hirelings.HirelingsMod;
+import net.sipe.hirelings.container.HirelingsGuiHandler;
 import net.sipe.hirelings.entity.npc.job.JobBase;
 import net.sipe.hirelings.entity.npc.job.JobCollector;
 import net.sipe.hirelings.entity.player.PlayerProperties;
@@ -19,6 +22,8 @@ public class EntityWorker extends EntityNpcBase {
 
     public EntityWorker(World worldIn) {
         super(worldIn);
+        npcInventoryHandler = new ItemStackHandler(15);
+        hasGui = true;
         job = new JobCollector();
         job.initTasks(this);
     }
@@ -30,13 +35,19 @@ public class EntityWorker extends EntityNpcBase {
 
     @Override
     public boolean processInteract(EntityPlayer player, EnumHand hand, ItemStack stack) {
-        if (!player.worldObj.isRemote && stack != null && stack.getItem() == Items.STICK && player.hasCapability(PLAYER_PROPERTIES_CAPABILITY, null)) {
-            PlayerProperties properties = player.getCapability(PLAYER_PROPERTIES_CAPABILITY, null);
-            properties.setLinkEntity(getEntityId());
-            player.addChatMessage(new HirelingsTextComponentString("Initiated link..."));
-            return true;
+        if (!player.worldObj.isRemote) {
+            if (stack != null && stack.getItem() == Items.STICK && player.hasCapability(PLAYER_PROPERTIES_CAPABILITY, null)) {
+                PlayerProperties properties = player.getCapability(PLAYER_PROPERTIES_CAPABILITY, null);
+                properties.setLinkEntity(getEntityId());
+                player.addChatMessage(new HirelingsTextComponentString("Initiated link..."));
+                return true;
+            }
         }
         return super.processInteract(player, hand, stack);
+    }
+
+    protected void openGui(EntityPlayer player) {
+        player.openGui(HirelingsMod.INSTANCE, HirelingsGuiHandler.HIRELINGS_NPC_GUI, worldObj, this.getEntityId(), 0, 0);
     }
 
     @Override

@@ -17,9 +17,9 @@ public abstract class JobBase {
 
     public abstract void initTasks(EntityNpcBase entity);
 
-    public abstract void readEntityFromNBT(NBTTagCompound compound);
+    public abstract void readJobFromNBT(NBTTagCompound compound);
 
-    public abstract  void writeEntityToNBT(NBTTagCompound compound);
+    public abstract void writeJobToNBT(NBTTagCompound compound);
 
     // FIXME: Returns first added task in case of duplicate tasks.
     public EntityAIBase getTask(Class<? extends EntityAIBase> aiClass) {

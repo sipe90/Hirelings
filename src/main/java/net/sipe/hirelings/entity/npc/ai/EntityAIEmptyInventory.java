@@ -51,6 +51,7 @@ public class EntityAIEmptyInventory extends EntityAIBase {
         validateInventory(inventory);
         this.inventory = inventory;
         this.inventoryPos = inventory.getPos();
+        entity.setHomePos(this.inventoryPos);
     }
 
     public void setInventoryPos(BlockPos inventoryPos) {
@@ -60,7 +61,7 @@ public class EntityAIEmptyInventory extends EntityAIBase {
     private void loadInventoryFromPos() {
         TileEntity tileEntity = entity.worldObj.getTileEntity(inventoryPos);
         validateInventory(tileEntity);
-        entity.setHomePosAndDistance(inventoryPos, (int)entity.getMaximumHomeDistance());
+        entity.setHomePos(inventoryPos);
         this.inventory = tileEntity;
     }
 

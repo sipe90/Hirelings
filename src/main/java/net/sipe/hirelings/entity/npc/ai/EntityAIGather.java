@@ -44,7 +44,6 @@ public class EntityAIGather extends EntityAIBase {
         this.speed = speed;
         this.radius = radius;
         this.filter = filter;
-        entity.setHomePosAndDistance(entity.getHomePosition(), radius);
         setMutexBits(1);
     }
 

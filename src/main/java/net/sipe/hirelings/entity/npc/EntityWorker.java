@@ -1,10 +1,12 @@
 package net.sipe.hirelings.entity.npc;
 
+import net.minecraft.entity.IEntityLivingData;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumHand;
+import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.World;
 import net.minecraftforge.items.ItemStackHandler;
 import net.sipe.hirelings.HirelingsMod;
@@ -13,6 +15,8 @@ import net.sipe.hirelings.entity.npc.job.JobBase;
 import net.sipe.hirelings.entity.npc.job.JobCollector;
 import net.sipe.hirelings.entity.player.PlayerProperties;
 import net.sipe.hirelings.util.HirelingsTextComponentString;
+
+import javax.annotation.Nullable;
 
 import static net.sipe.hirelings.capability.HirelingsCapabilities.PLAYER_PROPERTIES_CAPABILITY;
 
@@ -28,6 +32,13 @@ public class EntityWorker extends EntityNpcBase {
         job.initTasks(this);
     }
 
+    @Override
+    @Nullable
+    public IEntityLivingData onInitialSpawn(DifficultyInstance difficulty, @Nullable IEntityLivingData livingData) {
+        super.onInitialSpawn(difficulty,livingData);
+        this.setHomePosAndDistance(this.getPosition(), (int)this.getMaximumHomeDistance());
+        return livingData;
+    }
 
     public JobBase getJob() {
         return job;
@@ -54,7 +65,7 @@ public class EntityWorker extends EntityNpcBase {
     public void writeEntityToNBT(NBTTagCompound compound) {
         super.writeEntityToNBT(compound);
         NBTTagCompound jobCompound = new NBTTagCompound();
-        job.writeEntityToNBT(jobCompound);
+        job.writeJobToNBT(jobCompound);
         compound.setTag("npcJob", jobCompound);
     }
 
@@ -62,7 +73,7 @@ public class EntityWorker extends EntityNpcBase {
     public void readEntityFromNBT(NBTTagCompound compound) {
         super.readEntityFromNBT(compound);
         NBTTagCompound jobCompound = (NBTTagCompound) compound.getTag("npcJob");
-        job.readEntityFromNBT(jobCompound);
+        job.readJobFromNBT(jobCompound);
     }
 
 }

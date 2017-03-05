@@ -43,7 +43,7 @@ public class JobCollector extends JobBase {
     }
 
     @Override
-    public void writeEntityToNBT(NBTTagCompound compound) {
+    public void writeJobToNBT(NBTTagCompound compound) {
 
         Set<Item> itemsSet = itemFilter.getItems();
         Iterator<Item> iterator = itemsSet.iterator();
@@ -61,7 +61,7 @@ public class JobCollector extends JobBase {
     }
 
     @Override
-    public void readEntityFromNBT(NBTTagCompound compound) {
+    public void readJobFromNBT(NBTTagCompound compound) {
         int[] items = compound.getIntArray("filterItems");
         for (int id : items) {
             itemFilter.getItems().add(Item.getItemById(id));

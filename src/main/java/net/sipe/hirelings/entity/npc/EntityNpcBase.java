@@ -1,5 +1,7 @@
 package net.sipe.hirelings.entity.npc;
 
+import net.minecraft.block.Block;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.*;
 import net.minecraft.entity.ai.EntityAIAvoidEntity;
 import net.minecraft.entity.ai.EntityAILookIdle;
@@ -16,6 +18,7 @@ import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandlerModifiable;
@@ -156,6 +159,26 @@ public abstract class EntityNpcBase extends EntityCreature {
 
     public float getExperience() {
         return dataManager.get(EXPERIENCE);
+    }
+
+    public boolean canHarvestBlock(BlockPos pos)
+    {
+        IBlockState state = this.worldObj.getBlockState(pos);
+        Block block = state.getBlock();
+
+        if (state.getMaterial().isToolNotRequired()) {
+            return true;
+        }
+
+        String tool = block.getHarvestTool(state);
+        if (tool == null) {
+            return true;
+        }
+
+        // FIXME: Tool inventory slot
+        ItemStack stack = npcInventoryHandler.getStackInSlot(0);
+        int toolLevel = stack.getItem().getHarvestLevel(stack, tool, null, state);
+        return toolLevel >= block.getHarvestLevel(state);
     }
 
     @Override

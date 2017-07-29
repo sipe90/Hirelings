@@ -66,10 +66,7 @@ public class EntityAIEmptyInventory extends EntityAIBase {
     }
 
     private void validateInventory(TileEntity tileEntity) {
-        if (tileEntity == null) {
-            throw new IllegalArgumentException("TileEntity not found at given BlockPos");
-        }
-        if (!tileEntity.hasCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, null)) {
+        if (!InventoryUtil.isValidInventory(tileEntity)) {
             throw new IllegalArgumentException("Given TileEntity does not have ItemHandler capability");
         }
     }

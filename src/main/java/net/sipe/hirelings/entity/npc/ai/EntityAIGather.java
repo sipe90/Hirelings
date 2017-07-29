@@ -87,11 +87,13 @@ public class EntityAIGather extends EntityAIBase {
             if (entity.getNavigator().noPath()) {
                 entity.getNavigator().tryMoveToXYZ(currentTargetedItem.posX, currentTargetedItem.posY, currentTargetedItem.posZ, speed);
             }
+
             entity.getLookHelper().setLookPositionWithEntity(currentTargetedItem, 30.0F, 30.0F);
-        }
-        if (!currentTargetedItem.cannotPickup() && entity.getDistanceToEntity(currentTargetedItem) <= PICKUP_RANGE) {
-            onItemPickup(currentTargetedItem);
-            entity.getLookHelper().setLookPosition(entity.getLookHelper().getLookPosX(), entity.getLookHelper().getLookPosY(), entity.getLookHelper().getLookPosZ(), 0.0F, 0.0F);
+
+            if (entity.getDistanceToEntity(currentTargetedItem) <= PICKUP_RANGE) {
+                onItemPickup(currentTargetedItem);
+                entity.getLookHelper().setLookPosition(entity.getLookHelper().getLookPosX(), entity.getLookHelper().getLookPosY(), entity.getLookHelper().getLookPosZ(), 0.0F, 0.0F);
+            }
         }
     }
 

@@ -1,12 +1,21 @@
 package net.sipe.hirelings.util.inventory;
 
 import net.minecraft.item.ItemStack;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.IItemHandlerModifiable;
 import net.minecraftforge.items.ItemHandlerHelper;
 import net.sipe.hirelings.entity.npc.EntityNpcBase;
 
 public class InventoryUtil extends ItemHandlerHelper {
+
+    public static boolean isValidInventory(TileEntity tileEntity) {
+        if (tileEntity == null) {
+            throw new IllegalArgumentException("TileEntity was null");
+        }
+        return (tileEntity.hasCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, null));
+    }
 
     public static int getFreeInventorySlots(EntityNpcBase entity) {
         int freeSlots = 0;
